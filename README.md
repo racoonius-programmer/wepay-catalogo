@@ -134,3 +134,41 @@ Get-Content src\main\resources\catalogo-gamer.json | ConvertFrom-Json | ForEach-
 **Notas**
 - La implementación actual guarda los productos en memoria (no persistente). Para producción, sustituir `ProductService` por un repositorio con base de datos.
 - Si ves caracteres extraños en los textos (ej. `mecÃ¡nico`), asegúrate de que la terminal y las herramientas usen UTF-8; puedes añadir `spring.http.encoding.charset=UTF-8` en `application.properties` si es necesario.
+
+
+**Para ejecutarlo desde AWS EC2**
+## 1) Despliegue y ejecución en AWS EC2 (Amazon Linux 2023)
+
+Sigue estos pasos para desplegar el backend en una instancia EC2 de AWS desde cero:
+
+### Paso 1: Instalar dependencias en el servidor EC2
+Conéctate por SSH a la instancia e instala Git y Java:
+```bash
+sudo dnf update -y
+sudo dnf install git java-21-amazon-corretto-devel -y
+```
+
+### Paso 2: Clonar el repo y asignarle permisos al mvnw
+```bash
+git clone [https://github.com/tu-usuario/wepay-catalogo.git](https://github.com/tu-usuario/wepay-catalogo.git)
+cd wepay-catalogo
+chmod +x mvnw
+```
+### Paso 3: Iniciar el servidor en la ip de la instancia
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.address=0.0.0.0 --server.port=8090"
+```
+
+### Paso 4: Habilitar acceso en el Security Group de AWS
+Entra a la consola de AWS EC2 y selecciona tu instancia.
+
+En la pestaña Security, haz clic en el Security Group de la instancia.
+
+Haz clic en Edit inbound rules (Editar reglas de entrada).
+
+Agrega la siguiente regla:
+
+Tipo: Custom TCP
+Rango de puertos: 8090
+Origen: Anywhere-IPv4 (0.0.0.0/0)
+Guarda la regla.
