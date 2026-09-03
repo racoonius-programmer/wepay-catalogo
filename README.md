@@ -1,174 +1,261 @@
 # Catalogo (backend)
 
-Proyecto Spring Boot simple que expone un catálogo de productos vía REST.
+Proyecto Spring Boot que expone un catálogo de productos vía REST y puede ejecutarse tanto localmente como en Docker o en una instancia EC2 de AWS.
 
-**Prerequisitos:**
-- Java 17+ instalado
-- Docker (opcional)
-- `mvnw` (wrapper incluido)
+## Requisitos
 
-**1) Compilar**
+- Java 25 instalado
+- Maven wrapper incluido (`mvnw`)
+- Docker Desktop o Docker Engine instalado
+- Git (opcional para clonar desde repositorio)
 
-- Desde la carpeta del proyecto abre la terminal y ejecuta:
-```bash
+## 1) Instalar Docker en Windows
+
+Si vas a usar Docker en tu PC Windows:
+
+1. Descarga Docker Desktop desde: https://www.docker.com/products/docker-desktop/
+2. Instálalo y reinicia el equipo.
+3. Abre PowerShell y valida:
+
+```powershell
+docker --version
+```
+
+Si no aparece error, Docker quedó instalado correctamente.
+
+## 2) Compilar la aplicación sin Docker
+
+Desde la carpeta del proyecto ejecuta:
+
+```powershell
 .\mvnw -DskipTests clean package
 ```
 
-**2) Ejecutar en tu red local**
+Esto genera el JAR en `target`.
 
-Sigue estos pasos sencillos para que otra persona de tu red pueda ver los productos:
+## 3) Ejecutar la app en la red local
 
-- Ejecuta el archivo empaquetado (el programa) con estos ajustes para escuchar desde cualquier IP y usar el puerto 8090.
+La app debe escuchar en todas las interfaces (`0.0.0.0`) y en el puerto `8090`.
 
-PowerShell puede interpretar mal los argumentos con `-D`. Usa una de estas opciones:
+### Opción A: ejecutar con Maven
 
-Opción A (recomendada en PowerShell): pasar las propiedades antes del goal del wrapper:
 ```powershell
 .\mvnw -Dserver.address=0.0.0.0 -Dserver.port=8090 spring-boot:run
 ```
 
-Opción B (ejecutar el JAR desde PowerShell usando `--%` para evitar el parsing de PowerShell):
+### Opción B: ejecutar el JAR
+
 ```powershell
-java --% -Dserver.address=0.0.0.0 -Dserver.port=8090 -jar target\\catalogo-0.0.1-SNAPSHOT.jar
+java --% -Dserver.address=0.0.0.0 -Dserver.port=8090 -jar target\catalogo-0.0.1-SNAPSHOT.jar
 ```
 
-Opción C (usar cmd.exe):
+### Opción C: usar cmd.exe
+
 ```cmd
-cmd /c "java -Dserver.address=0.0.0.0 -Dserver.port=8090 -jar target\\catalogo-0.0.0.1-SNAPSHOT.jar"
+cmd /c "java -Dserver.address=0.0.0.0 -Dserver.port=8090 -jar target\catalogo-0.0.1-SNAPSHOT.jar"
 ```
 
-Esto hace que el servidor escuche en todas las interfaces de red y en el puerto `8090`.
+## 4) Ver la IP de tu equipo y acceder desde otra PC
 
-**3) Averiguar la IP de tu equipo (Windows)**
+En Windows:
 
-- Abre PowerShell y escribe:
 ```powershell
 ipconfig
 ```
-- Busca la `IPv4` asociada a la red a la que están conectados los otros equipos (ej: `192.168.1.42`).
 
-**4) Ver los productos desde otro equipo**
+Busca la IPv4 de la red local, por ejemplo:
 
-- Desde otra computadora en la misma red, abre la terminal y ejecuta:
-```bash
-curl http://<IP_DE_TU_PC>:8090/api/products
+```text
+192.168.1.42
 ```
-Por ejemplo:
+
+Desde otra computadora de la misma red, prueba:
+
 ```bash
 curl http://192.168.1.42:8090/api/products
 ```
 
-- En PowerShell puedes usar:
+o en PowerShell:
+
 ```powershell
 Invoke-RestMethod -Uri http://192.168.1.42:8090/api/products
 ```
 
-**Probar con Postman**
+## 5) Probar en Postman
 
-- Abre Postman y crea una nueva request `GET`.
-- URL local (misma máquina): `http://localhost:8090/api/products`.
-- URL desde otra máquina: `http://<IP_DE_TU_PC>:8090/api/products` (ej. `http://192.168.1.42:8090/api/products`).
-- Haz clic en `Send`. Debes recibir un `200 OK` con el JSON de productos.
+- URL local: `http://localhost:8090/api/products`
+- URL desde otra PC: `http://<IP_DE_TU_PC>:8090/api/products`
+- Método: `GET`
+- Debes recibir un `200 OK` y un JSON con los productos.
 
-Si necesitas ver cabeceras o el body en formato legible, en Postman revisa la pestaña `Body` y selecciona `Pretty` -> `JSON`.
+## 6) Si el puerto 8090 está ocupado
 
-**Si el puerto aparece en uso**
+Revisa qué proceso lo usa:
 
-- Comprueba qué proceso está usando el puerto `8090` (PowerShell):
 ```powershell
 Get-NetTCPConnection -LocalPort 8090 | Format-Table -AutoSize
 ```
-- Obtén el PID y detén el proceso (si es seguro hacerlo):
+
+Si es seguro, detén el proceso:
+
 ```powershell
 $pid = (Get-NetTCPConnection -LocalPort 8090).OwningProcess
 Get-Process -Id $pid
 Stop-Process -Id $pid -Force
 ```
-- Alternativa rápida: ejecutar la app en otro puerto (ej. 8091) usando `--%` en PowerShell:
+
+También puedes cambiar el puerto a 8091:
+
 ```powershell
-java --% -Dserver.address=0.0.0.0 -Dserver.port=8091 -jar target\\catalogo-0.0.1-SNAPSHOT.jar
-```
-o con el wrapper:
-```powershell
-.\mvnw '-Dserver.port=8091' spring-boot:run
+java --% -Dserver.address=0.0.0.0 -Dserver.port=8091 -jar target\catalogo-0.0.1-SNAPSHOT.jar
 ```
 
-Nota: detén solo procesos que reconozcas; si no estás seguro, cambia el puerto.
+## 7) Si no funciona desde otra máquina
 
-**5) Si no funciona desde otra máquina**
+Revisa el firewall de Windows:
 
-- Revisa que tu firewall permita conexiones al puerto `8090`. En Windows puedes añadir una regla así:
 ```powershell
 New-NetFirewallRule -DisplayName "Catalogo Inbound" -Direction Inbound -LocalPort 8090 -Protocol TCP -Action Allow
 ```
 
-**6) Usar Docker (opcional)**
+Y confirma que la IP que usas es la correcta del equipo que ejecuta la app.
 
-- Construir la imagen:
+## 8) Ejecutar con Docker localmente
+
+### Construir la imagen
+
 ```bash
-docker build -t catalogo:latest .
+docker build -t sh1r8/catalogo:latest .
 ```
-- Ejecutar el contenedor y exponer el puerto `8090`:
+
+### Ejecutar el contenedor
+
 ```bash
-docker run --rm -p 8090:8090 catalogo:latest
+docker run --rm -p 8090:8090 sh1r8/catalogo:latest
 ```
 
-Luego accede con `http://<IP_DE_TU_PC>:8090/api/products`.
+### Probarlo
 
-**Endpoints principales** (base: http://<IP_HOST>:8081)
-- `GET /api/products` — lista todos los productos
-- `GET /api/products/{id}` — obtiene producto por id
-- `POST /api/products` — crea un producto (JSON)
-- `PUT /api/products/{id}` — actualiza un producto
-- `DELETE /api/products/{id}` — borra un producto
-
-**Carga del catálogo de ejemplo**
-
-El proyecto incluye `src/main/resources/catalogo-gamer.json`. `ProductService` carga automáticamente ese archivo al iniciar y crea los productos en memoria.
-
-Si quieres reproducir manualmente la carga usando PowerShell:
-```powershell
-Get-Content src\main\resources\catalogo-gamer.json | ConvertFrom-Json | ForEach-Object { Invoke-RestMethod -Uri http://localhost:8081/api/products -Method Post -Body ($_ | ConvertTo-Json) -ContentType 'application/json' }
+```bash
+curl http://localhost:8090/api/products
 ```
 
-**Notas**
-- La implementación actual guarda los productos en memoria (no persistente). Para producción, sustituir `ProductService` por un repositorio con base de datos.
-- Si ves caracteres extraños en los textos (ej. `mecÃ¡nico`), asegúrate de que la terminal y las herramientas usen UTF-8; puedes añadir `spring.http.encoding.charset=UTF-8` en `application.properties` si es necesario.
+## 9) Subir la imagen a Docker Hub
 
+Primero inicia sesión:
 
-**Para ejecutarlo desde AWS EC2**
-## 1) Despliegue y ejecución en AWS EC2 (Amazon Linux 2023)
+```bash
+docker login
+```
 
-Sigue estos pasos para desplegar el backend en una instancia EC2 de AWS desde cero:
+Luego sube la imagen:
 
-### Paso 1: Instalar dependencias en el servidor EC2
-Conéctate por SSH a la instancia e instala Git y Java:
+```bash
+docker push sh1r8/catalogo:latest
+```
+
+Si quieres, puedes usar una versión etiquetada:
+
+```bash
+docker tag sh1r8/catalogo:latest sh1r8/catalogo:v1
+docker push sh1r8/catalogo:v1
+```
+
+## 10) Ejecutar la imagen en una EC2 de AWS
+
+Esto permite que la app esté expuesta con la IP pública de la instancia EC2.
+
+### 10.1) Instalar Docker en la EC2
+
+En Amazon Linux 2023:
+
 ```bash
 sudo dnf update -y
-sudo dnf install git java-21-amazon-corretto-devel -y
+sudo dnf install -y docker git
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user
+newgrp docker
 ```
 
-### Paso 2: Clonar el repo y asignarle permisos al mvnw
+Verifica:
+
 ```bash
-git clone [https://github.com/tu-usuario/wepay-catalogo.git](https://github.com/tu-usuario/wepay-catalogo.git)
-cd wepay-catalogo
-chmod +x mvnw
+docker --version
 ```
-### Paso 3: Iniciar el servidor en la ip de la instancia
+
+### 10.2) Descargar la imagen desde Docker Hub
+
 ```bash
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.address=0.0.0.0 --server.port=8090"
+docker pull sh1r8/catalogo:latest
 ```
 
-### Paso 4: Habilitar acceso en el Security Group de AWS
-Entra a la consola de AWS EC2 y selecciona tu instancia.
+### 10.3) Ejecutar el contenedor
 
-En la pestaña Security, haz clic en el Security Group de la instancia.
+```bash
+docker run -d --name catalogo -p 8090:8090 sh1r8/catalogo:latest
+```
 
-Haz clic en Edit inbound rules (Editar reglas de entrada).
+### 10.4) Verificar acceso local en la EC2
 
-Agrega la siguiente regla:
+```bash
+curl http://localhost:8090/api/products
+```
 
-Tipo: Custom TCP
-Rango de puertos: 8090
-Origen: Anywhere-IPv4 (0.0.0.0/0)
-Guarda la regla.
+### 10.5) Abrir el puerto en el Security Group de AWS
+
+En la EC2:
+
+- Ve a la instancia
+- Entra a `Security Groups`
+- Edita las reglas de entrada
+- Agrega:
+  - Tipo: `Custom TCP`
+  - Puerto: `8090`
+  - Origen: `0.0.0.0/0`
+
+Esto permite acceso desde Internet.
+
+### 10.6) Probar con la IP pública de la EC2
+
+Obtén la IP pública de la instancia y luego prueba:
+
+```bash
+curl http://<IP_PUBLICA_EC2>:8090/api/products
+```
+
+Ejemplo:
+
+```bash
+curl http://18.216.123.45:8090/api/products
+```
+
+## 11) Endpoints principales
+
+Base URL local o pública:
+
+```text
+http://<IP_HOST>:8090
+```
+
+- `GET /api/products` — lista todos los productos
+- `GET /api/products/{id}` — obtiene un producto por id
+- `POST /api/products` — crea un producto
+- `PUT /api/products/{id}` — actualiza un producto
+- `DELETE /api/products/{id}` — elimina un producto
+
+## 12) Carga del catálogo de ejemplo
+
+El proyecto incluye `src/main/resources/catalogo-gamer.json` y `ProductService` lo carga automáticamente al iniciar.
+
+Si quieres reenviar manualmente los productos con PowerShell:
+
+```powershell
+Get-Content src\main\resources\catalogo-gamer.json | ConvertFrom-Json | ForEach-Object { Invoke-RestMethod -Uri http://localhost:8090/api/products -Method Post -Body ($_ | ConvertTo-Json) -ContentType 'application/json' }
+```
+
+## 13) Notas
+
+- La implementación actual guarda los productos en memoria; no es persistente.
+- Para producción, conviene reemplazar `ProductService` por un repositorio con base de datos.
+- Si ves caracteres extraños, revisa que la terminal use UTF-8.
+- La app está configurada para Java 25 y para escuchar en `0.0.0.0` en el puerto `8090`.
