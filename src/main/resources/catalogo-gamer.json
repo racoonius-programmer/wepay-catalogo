@@ -1,0 +1,10 @@
+[
+  { "name": "Teclado mecánico gamer RedBack", "description": "Switches ópticos, iluminación RGB, key rollover 100%", "price": 79990 },
+  { "name": "Mouse gamer Hydra X", "description": "Sensor 16000 DPI, peso ajustable, 6 botones programables", "price": 49990 },
+  { "name": "Auriculares GameSound Pro", "description": "Sonido envolvente 7.1, micrófono con cancelación de ruido", "price": 89990 },
+  { "name": "Monitor 27\" 144Hz IPS", "description": "144Hz, 1ms, FreeSync, 27 pulgadas", "price": 249990 },
+  { "name": "Silla gamer TitanComfort", "description": "Ergonómica, soporte lumbar, reposabrazos 4D", "price": 199990 },
+  { "name": "Alfombrilla XL Pro", "description": "Superficie extendida para teclado y mouse, base antideslizante", "price": 29990 },
+  { "name": "Microfono StudioCast", "description": "Micrófono USB para streaming y comunicación", "price": 69990 },
+  { "name": "Webcam 1080p StreamCam", "description": "1080p30, autoexposición, ideal para streamers", "price": 59990 }
+]
