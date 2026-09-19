@@ -2,6 +2,8 @@ package wepay.duoc.catalogo.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import wepay.duoc.catalogo.dto.ProductRequest;
+import wepay.duoc.catalogo.dto.ProductResponse;
 import wepay.duoc.catalogo.model.Product;
 import wepay.duoc.catalogo.service.ProductService;
 
@@ -19,26 +21,28 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> list() {
-        return service.findAll();
+    public List<ProductResponse> list() {
+        return service.findAll().stream().map(this::toResponse).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> get(@PathVariable Long id) {
+    public ResponseEntity<ProductResponse> get(@PathVariable Long id) {
         return service.findById(id)
+                .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Product> create(@RequestBody Product p) {
-        Product created = service.create(p);
-        return ResponseEntity.created(URI.create("/api/products/" + created.getId())).body(created);
+    public ResponseEntity<ProductResponse> create(@RequestBody ProductRequest request) {
+        Product created = service.create(toProduct(request));
+        return ResponseEntity.created(URI.create("/api/products/" + created.getId())).body(toResponse(created));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Product p) {
-        return service.update(id, p)
+    public ResponseEntity<ProductResponse> update(@PathVariable Long id, @RequestBody ProductRequest request) {
+        return service.update(id, toProduct(request))
+                .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -47,5 +51,13 @@ public class ProductController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         if (service.delete(id)) return ResponseEntity.noContent().build();
         return ResponseEntity.notFound().build();
+    }
+
+    private Product toProduct(ProductRequest request) {
+        return new Product(null, request.name(), request.description(), request.price());
+    }
+
+    private ProductResponse toResponse(Product product) {
+        return new ProductResponse(product.getId(), product.getName(), product.getDescription(), product.getPrice());
     }
 }
